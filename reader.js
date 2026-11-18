@@ -12,18 +12,23 @@ const twoDigits = value => String(value).padStart(2, "0");
 const rail = one(".rail-inner");
 const cover = one(".cover");
 const endOfExchange = one("#beyond");
+const oppositeView = one(".switch-view");
+const fromChen = document.body.dataset.side === "chen";
+const oppositeName = fromChen ? "沈一鸣" : "陈雾";
 const slips = one(".slips");
 const slipRows = all(".sliprow", slips).map(row => all("span",row));
 const droplets = [];
-for (let i = 0; i < 7; i++) {
+const wetPicture = one(".backwash .picture");
+for (let i = 0; wetPicture && i < 7; i++) {
   const drop = document.createElement("i");
   drop.className = "drop";
   drop.setAttribute("aria-hidden", "true");
-  one(".backwash .picture").appendChild(drop);
+  wetPicture.appendChild(drop);
   droplets.push(drop);
 }
 root.classList.add("enhanced");
 let lastChapter = -2;
+let lastTarget = null;
 let ticking = false;
 
 function draw() {
@@ -35,13 +40,24 @@ function draw() {
     if (chapters[i].getBoundingClientRect().top > eye) break;
     current = i;
   }
-  const atEnd = endOfExchange.getBoundingClientRect().top < eye;
+  const endTop = endOfExchange.getBoundingClientRect().top;
+  const atBottom = Math.ceil(scrollY + height) >= root.scrollHeight - 1;
+  const atEnd = endTop < eye || (atBottom && endTop < height);
+  const pairedDay = current < 0 || atEnd ? 0 : Number(chapters[current].dataset.pair);
+  if (oppositeView && pairedDay !== lastTarget) {
+    lastTarget = pairedDay;
+    oppositeView.href = oppositeView.dataset.page + (pairedDay ? "#c" + pairedDay : "");
+    const destination = pairedDay ? "六月" + pairedDay + "日，同一次换带" : "从第一天读起";
+    oppositeView.title = "切换到" + oppositeName + "视角：" + destination;
+    oppositeView.setAttribute("aria-label", oppositeView.title);
+  }
   one(".railsheet").hidden = atEnd;
   one(".axis").hidden = atEnd;
   one(".rail-end").hidden = !atEnd;
   if (current !== lastChapter) {
     lastChapter = current;
-    const day = Math.max(1, current + 1);
+    const localDay = Math.max(1, current + 1);
+    const day = fromChen ? 14 - localDay : localDay;
     one("#day-a").textContent = "06." + twoDigits(day);
     one("#day-b").textContent = "06." + twoDigits(14 - day);
     rail.style.setProperty("--a", ((day - 1) / 12) * 100 + "%");
