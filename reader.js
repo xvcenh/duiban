@@ -27,6 +27,16 @@ for (let i = 0; wetPicture && i < 7; i++) {
   droplets.push(drop);
 }
 root.classList.add("enhanced");
+const bookmarkKey = "duiban:chapter:" + (fromChen ? "chen" : "shen");
+const resume = one(".start");
+try {
+  const saved = localStorage.getItem(bookmarkKey);
+  const previous = chapters.find(chapter => chapter.id === saved);
+  if (previous && previous !== chapters[0]) {
+    resume.href = "#" + saved;
+    resume.firstChild.textContent = "接着读 · " + one(".chap-index", previous).textContent + " ";
+  }
+} catch {}
 let lastChapter = -2;
 let lastTarget = null;
 let ticking = false;
@@ -56,6 +66,9 @@ function draw() {
   one(".rail-end").hidden = !atEnd;
   if (current !== lastChapter) {
     lastChapter = current;
+    if (current >= 0) {
+      try { localStorage.setItem(bookmarkKey, chapters[current].id); } catch {}
+    }
     const localDay = Math.max(1, current + 1);
     const day = fromChen ? 14 - localDay : localDay;
     one("#day-a").textContent = "06." + twoDigits(day);
